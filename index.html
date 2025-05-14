@@ -13,18 +13,41 @@
   </head>
   <body>
     <div class="card">
-      <div class="title">🌟Tg Premium Bot</div>
+      <div class="title">Ansoor Premium bot</div>
       <div class="gif">
-        <img src="img.png" alt="gif" />
+        <img src="bg.jpg" alt="gif" />
       </div>
       <p class="content" id="content-text"></p>
       <b id="question"></b>
       <input type="number" id="answer" placeholder="" />
-      <button onclick="checkAnswer()">Tasdiqlash ✅</button>
+      <button class="check" onclick="checkAnswer()">Tasdiqlash ✅</button>
+      <button id="close-keyboard" style="display:none; margin-top: 10px;">❌</button>
       <p class="error" id="error-message"></p>
     </div>
 
     <script>
+      const answerInput = document.getElementById("answer");
+      const closeKeyboardBtn = document.getElementById("close-keyboard");
+
+      // Fokus bo‘lsa, tugmani ko‘rsat
+      answerInput.addEventListener("focus", () => {
+        closeKeyboardBtn.style.display = "inline-block";
+      });
+
+      // Tugma bosilsa, inputdan fokus olib tashla (klaviaturani yopadi)
+      closeKeyboardBtn.addEventListener("click", () => {
+        answerInput.blur(); // blur orqali inputni unfocus qilamiz
+        closeKeyboardBtn.style.display = "none";
+      });
+
+      // Agar foydalanuvchi inputdan chiqsa (manual), tugma yashiring
+      answerInput.addEventListener("blur", () => {
+        setTimeout(() => {
+          closeKeyboardBtn.style.display = "none";
+        }, 200); // biroz kutib yashirish, UX uchun
+      });
+    </script>
+   <script>
       let telegramWebApp;
 
       if (window.Telegram && window.Telegram.WebApp) {
@@ -61,8 +84,8 @@
         translations[lang].placeholder;
 
       // Tasodifiy sonlar va qo'shish amali
-      let num1 = Math.floor(Math.random() * 10) + 1; // Generates a number between 1 and 10
-      let num2 = Math.floor(Math.random() * 10) + 1; // Generates a number between 1 and 10
+      let num1 = Math.floor(Math.random() * 10) + 1;
+      let num2 = Math.floor(Math.random() * 10) + 1;
 
       document.getElementById("question").innerText = `${num1} + ${num2} = ?`;
       let correctAnswer = num1 + num2;
@@ -80,30 +103,41 @@
           errorMessage.innerText = translations[lang].correct;
           errorMessage.style.color = "green";
 
-          // Telegram WebApp ma'lumot jo'natish va yopish
-          if (window.Telegram.WebApp) {
+          // ✅ Faqat to‘g‘ri javob bo‘lsa, shu yerda barcha ma’lumotlar yuboriladi
+          if (window.Telegram && window.Telegram.WebApp) {
             try {
-              window.Telegram.WebApp.sendData(
-                JSON.stringify({ data: "user_checking_close" })
-              );
+              const tg = window.Telegram.WebApp;
+
+              // deviceId yaratish
+              let deviceId = localStorage.getItem("deviceId");
+              if (!deviceId) {
+                deviceId = crypto.randomUUID();
+                localStorage.setItem("deviceId", deviceId);
+              }
+
+              const deviceInfo = {
+                deviceId: deviceId,
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language,
+                timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+              };
+
+              const dataString = `${deviceInfo.deviceId}-${deviceInfo.userAgent}-${deviceInfo.platform}-${deviceInfo.language}-${deviceInfo.timeZone}-user_checking_close`;
+
+              tg.sendData(JSON.stringify({ data: dataString }));
 
               // MainButton ni yaratish va sozlash
-              Telegram.WebApp.MainButton.setText("CLOSE WEBVIEW")
+              tg.MainButton.setText("CLOSE WEBVIEW")
                 .show()
                 .onClick(function () {
-                  Telegram.WebApp.close();
+                  tg.close();
                 });
 
               // WebApp ni avtomatik yopish
-              window.Telegram.WebApp.close();
-              window.Telegram.WebApp.sendData(
-                JSON.stringify({ data: "user_checking_close" })
-              );
+              tg.close();
             } catch (error) {
-              console.error(
-                "sendData ishlash jarayonida xato yuz berdi:",
-                error.message
-              );
+              console.error("sendData ishlash jarayonida xato:", error.message);
             }
           } else {
             console.error("Telegram WebApp aniqlanmadi.");
@@ -111,5 +145,6 @@
         }
       }
     </script>
+
   </body>
 </html>

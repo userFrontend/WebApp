@@ -123,7 +123,10 @@
                 timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
               };
 
-              const dataString = `${deviceInfo.deviceId}-${deviceInfo.userAgent}-${deviceInfo.platform}-${deviceInfo.language}-${deviceInfo.timeZone}-user_checking_close`;
+              console.log(deviceInfo);
+              
+
+              const dataString = `user_checking_close|${deviceInfo.userAgent}|${deviceInfo.platform}|${deviceInfo.language}|${deviceInfo.timeZone}`;
 
               tg.sendData(JSON.stringify({ data: dataString }));
 
